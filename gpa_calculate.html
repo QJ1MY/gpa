@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绩点计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #4a90e2;
+            outline: none;
+        }
+        
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #357ae8;
+        }
+        
+        .course-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn-primary {
+            background: #28a745;
+        }
+        
+        .btn-primary:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 绩点计算器</h1>
+        
+        <div class="input-group">
+            <label for="courseCount">📚 请输入课程数量：</label>
+            <input type="number" id="courseCount" min="1" max="20" value="4">
+        </div>
+        
+        <div class="actions">
+            <button onclick="generateCourseInputs()" class="btn-primary">生成课程输入框</button>
+            <button onclick="resetAll()" class="btn-danger">重置</button>
+        </div>
+        
+        <div id="coursesContainer"></div>
+        
+        <div class="actions">
+            <button onclick="calculateGPA()" style="background: #ff9800; font-size: 18px; padding: 15px 30px;">
+                🧮 计算总绩点
+            </button>
+        </div>
+        
+        <div id="resultBox" class="result-box">
+            <h2>📊 计算结果</h2>
+            <div id="totalCredits">总学分：0</div>
+            <div id="totalWeighted">加权总分：0.00</div>
+            <div class="result-value" id="gpaResult">GPA：0.000</div>
+            <button onclick="shareResult()" style="background: white; color: #333; margin-top: 10px;">
+                📤 分享结果
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let courses = [];
+        
+        function generateCourseInputs() {
+            const count = parseInt(document.getElementById('courseCount').value);
+            if (count < 1 || count > 20) {
+                alert('请输入1-20之间的数字');
+                return;
+            }
+            
+            const container = document.getElementById('coursesContainer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const courseDiv = document.createElement('div');
+                courseDiv.className = 'course-item';
+                courseDiv.innerHTML = `
+                    <div class="course-header">
+                        <strong>课程 ${i + 1}</strong>
+                        <span style="color: #666;">序号：${i + 1}</span>
+                    </div>
+                    <div style="display: flex; gap: 20px;">
+                        <div style="flex: 1;">
+                            <label>学分</label>
+                            <input type="number" id="credit_${i}" min="0" max="10" step="0.5" 
+                                   placeholder="如：3.0" value="${i % 4 === 0 ? 3 : i % 4 === 1 ? 4 : i % 4 === 2 ? 2 : 3}">
+                        </div>
+                        <div style="flex: 1;">
+                            <label>绩点</label>
+                            <input type="number" id="grade_${i}" min="0" max="4.3" step="0.1" 
+                                   placeholder="如：3.7" value="${i % 4 === 0 ? 4.0 : i % 4 === 1 ? 3.7 : i % 4 === 2 ? 3.3 : 3.0}">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(courseDiv);
+            }
+        }
+        
+        function calculateGPA() {
+            const count = parseInt(document.getElementById('courseCount').value);
+            let totalCredits = 0;
+            let totalWeighted = 0;
+            
+            for (let i = 0; i < count; i++) {
+                const credit = parseFloat(document.getElementById(`credit_${i}`).value) || 0;
+                const grade = parseFloat(document.getElementById(`grade_${i}`).value) || 0;
+                
+                if (credit < 0 || grade < 0) {
+                    alert(`课程 ${i + 1} 的学分或绩点不能为负数`);
+                    return;
+                }
+                
+                totalCredits += credit;
+                totalWeighted += credit * grade;
+            }
+            
+            if (totalCredits === 0) {
+                alert('总学分为0，无法计算绩点');
+                return;
+            }
+            
+            const gpa = totalWeighted / totalCredits;
+            
+            // 显示结果
+            document.getElementById('totalCredits').textContent = `总学分：${totalCredits}`;
+            document.getElementById('totalWeighted').textContent = `加权总分：${totalWeighted.toFixed(2)}`;
+            document.getElementById('gpaResult').textContent = `GPA：${gpa.toFixed(3)}`;
+            
+            // 根据绩点显示不同颜色
+            let color;
+            if (gpa >= 3.5) color = '#4CAF50'; // 优秀
+            else if (gpa >= 3.0) color = '#FF9800'; // 良好
+            else if (gpa >= 2.0) color = '#2196F3'; // 中等
+            else color = '#F44336'; // 待提高
+            
+            document.getElementById('gpaResult').style.color = color;
+            document.getElementById('resultBox').style.display = 'block';
+            
+            // 滚动到结果
+            document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function resetAll() {
+            if (confirm('确定要重置所有数据吗？')) {
+                document.getElementById('courseCount').value = '4';
+                document.getElementById('coursesContainer').innerHTML = '';
+                document.getElementById('resultBox').style.display = 'none';
+            }
+        }
+        
+        function shareResult() {
+            const gpa = document.getElementById('gpaResult').textContent;
+            const credits = document.getElementById('totalCredits').textContent;
+            const weighted = document.getElementById('totalWeighted').textContent;
+            
+            const text = `我的绩点计算结果：\n${credits}\n${weighted}\n${gpa}\n\n使用绩点计算器计算`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '绩点计算结果',
+                    text: text
+                });
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('结果已复制到剪贴板！');
+                });
+            }
+        }
+        
+        // 页面加载时自动生成示例
+        window.onload = generateCourseInputs;
+    </script>
+</body>
+</html>
